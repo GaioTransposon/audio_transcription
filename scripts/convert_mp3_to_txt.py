@@ -72,13 +72,79 @@ failed_transcriptions_file_names = ["papo20141113-WA0015.m4a.mp3",
               "papo20140908-WA0003.m4a.mp3",
               "papo20141027-WA0001.m4a.mp3",
               "papo20141118-WA0001.m4a.mp3",
-              "papo20140912-WA0006.m4a.mp3"]
+              "papo20140912-WA0006.m4a.mp3",
+              "papo20141105-WA0001.m4a.mp3",
+              "papo20140911-WA0004.m4a.mp3",
+              "papo20141101-WA0001.m4a.mp3",
+              "papo20141002-WA0001.m4a.mp3",
+              "papo20141108-WA0001.m4a.mp3",
+              "papo20141030-WA0022.m4a.mp3",
+              "papo20140920-WA0000.m4a.mp3",
+              "papo20140924-WA0013.m4a.mp3"]
+
+set(failed_transcriptions_file_names)
+print(len(failed_transcriptions_file_names))
 
 
-print(failed_transcriptions_file_names)
+
+
+
+
+from pydub import AudioSegment
+import os
+
+
+# List of filenames that you want to split
+files_to_split = failed_transcriptions_file_names  # Replace with your list of failed files
+
+# Maximum size of each part in bytes (7.5 MB)
+max_size = 7.4 * 1024 * 1024
+
+# Loop through each file in the list
+for filename in files_to_split:
+    # Full path of the mp3 file
+    mp3_path = os.path.join(folder_path, filename)
+
+    # Load the file
+    audio = AudioSegment.from_mp3(mp3_path)
+
+    # Calculate the number of parts to split into based on the file size
+    file_size = os.path.getsize(mp3_path)
+    num_parts = max(2, int(file_size // max_size) + 1)
+
+    # Calculate duration of each part
+    part_duration = len(audio) // num_parts
+
+    # Split and save the parts
+    for i in range(num_parts):
+        start_time = i * part_duration
+        end_time = start_time + part_duration if i < num_parts - 1 else len(audio)
+        part = audio[start_time:end_time]
+        part.export(os.path.join(folder_path, f"{filename.replace('.mp3', '')}_part_{i+1}.mp3"), format="mp3")
+
+print("Splitting completed.")
+
+
+
+
+
+
+# Initialize an empty list to store filenames
+part_files = []
+
+# Loop through each file in the folder
+for filename in os.listdir(folder_path):
+    if "part_" in filename:
+        # Add the file to the list
+        part_files.append(filename)
+
+# Print or return the list of files
+print(part_files)
+
+
 
 # Loop through each file name in the list
-for filename in failed_transcriptions_file_names:
+for filename in part_files:
     try:
         # Join the folder path and file name
         mp3_path = os.path.join(folder_path, filename)
@@ -101,7 +167,7 @@ for filename in failed_transcriptions_file_names:
     except sr.UnknownValueError:
         print(f"Could not understand audio in file {filename}")
     except sr.RequestError as e:
-        print(f"Could not request results from Google Speech Recognition service for file {filename}; {e}")
+        print(f"service for file {filename}; {e}")
     except Exception as e:
         print(f"An error occurred while processing file {filename}: {e}")
 
